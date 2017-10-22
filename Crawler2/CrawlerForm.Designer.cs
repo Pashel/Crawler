@@ -35,7 +35,7 @@
             this.Url = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
-            this.button1 = new System.Windows.Forms.Button();
+            this.Start = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // Word
@@ -97,15 +97,15 @@
             this.richTextBox1.TabIndex = 9;
             this.richTextBox1.Text = "";
             // 
-            // button1
+            // Start
             // 
-            this.button1.Location = new System.Drawing.Point(11, 35);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(531, 52);
-            this.button1.TabIndex = 8;
-            this.button1.Text = "Начать";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.Start.Location = new System.Drawing.Point(11, 35);
+            this.Start.Name = "Start";
+            this.Start.Size = new System.Drawing.Size(531, 52);
+            this.Start.TabIndex = 8;
+            this.Start.Text = "Начать";
+            this.Start.UseVisualStyleBackColor = true;
+            this.Start.Click += new System.EventHandler(this.StartClick);
             // 
             // CrawlerForm
             // 
@@ -119,7 +119,7 @@
             this.Controls.Add(this.Url);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.richTextBox1);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.Start);
             this.MaximizeBox = false;
             this.MaximumSize = new System.Drawing.Size(566, 338);
             this.MinimumSize = new System.Drawing.Size(566, 338);
@@ -139,7 +139,7 @@
         private System.Windows.Forms.TextBox Url;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.RichTextBox richTextBox1;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button Start;
     }
 }
 

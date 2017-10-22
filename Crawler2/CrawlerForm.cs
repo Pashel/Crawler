@@ -1,45 +1,71 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using  Crawler2.BLL.Contracts;
 using Crawler2.BLL.Services;
+using System.ComponentModel.DataAnnotations;
 
 namespace Crawler2
 {
     public partial class CrawlerForm : Form
     {
+        private ICrawler _crawler;
+
         public CrawlerForm()
         {
             InitializeComponent();
+
+            _crawler = new Crawler();
         }
 
-        private async void button1_Click(object sender, EventArgs e)
+        private async void StartClick(object sender, EventArgs e)
         {
-            Start();
+            FormStateWorking();
 
-            Crawler crawler = new Crawler(Word.Text, int.Parse(Deep.Text));
+            int deep;
+            try {
+                deep = int.Parse(Deep.Text);
+            }
+            catch (Exception ex) {
+                richTextBox1.Text = "Can't convert Deep field to the number";
+                FormStateFree();
+                return;
+            }
 
             // when DownloadingGroupSize >>> and TimeLimitToDownload <<< than crawler works faster but quality is worse (next example works faster)
             // crawler.DownloadingGroupSize = 250;
             // crawler.TimeLimitToDownload = 5;
 
-            var result = await crawler.StartAsync(Url.Text);
+            List<string> result;
+            try {
+                result = await _crawler.StartAsync(Url.Text, deep, Word.Text);
+            }
+            catch (ValidationException ex) {
+                richTextBox1.Text = ex.Message;
+                FormStateFree();
+                return;
+            }
 
-            Finish(result);
+            PrintResult(result);
+            FormStateFree();
         }
 
-        private void Start()
-        {
-            button1.Enabled = false;
-            richTextBox1.Text = "";
-        }
-
-        private void Finish(List<string> result)
+        private void PrintResult(List<string> result)
         {
             richTextBox1.Text += String.Format("Total: {0}\r\n", result.Count);
             foreach (var url in result) {
                 richTextBox1.Text += String.Format("{0}\r\n", url); ;
             }
-            button1.Enabled = true;
+        }
+        private void FormStateWorking()
+        {
+            Start.Enabled = false;
+            richTextBox1.Clear();
+        }
+
+        private void FormStateFree()
+        {
+            Start.Enabled = true;
         }
     }
 }

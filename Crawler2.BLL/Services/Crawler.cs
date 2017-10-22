@@ -4,13 +4,15 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Net.Http;
 using System.Text.RegularExpressions;
+using System.ComponentModel.DataAnnotations;
+using Crawler2.BLL.Contracts;
 
 namespace Crawler2.BLL.Services
 {
-    public class Crawler
+    public class Crawler : ICrawler
     {
-        private readonly string _word;
-        private readonly int _deep;
+        private string _word;
+        private int _deep;
 
         private static HttpClient _client;
 
@@ -22,16 +24,29 @@ namespace Crawler2.BLL.Services
 
         private const string HRefPattern = "href\\s*=\\s*[\"']\\s*((http|/[^/\"'])[^\"']*)[\"']";
 
-        public Crawler(string word, int deep)
+        private IValidator _validator;
+
+        public Crawler()
         {
-            _word = word;
-            _deep = deep;
             _client = new HttpClient();
-            _client.Timeout = TimeSpan.FromSeconds(TimeLimitToDownload);
+            _validator = new Validator();
+            //_client.Timeout = TimeSpan.FromSeconds(TimeLimitToDownload);
         }
 
-        public async Task<List<string>> StartAsync(string link)
+        public async Task<List<string>> StartAsync(string link, int deep, string word)
         {
+            var result = _validator.CheckDeep(deep);
+            if (!result.Success) {
+                throw new ValidationException(result.Message);
+            }
+            result = _validator.CheckWord(word);
+            if (!result.Success) {
+                throw new ValidationException(result.Message);
+            }
+
+            _word = word;
+            _deep = deep;
+
             string content = await GetContentAsync(link);
             await ParseContentAsync(link, content, _deep);
             return _results;
