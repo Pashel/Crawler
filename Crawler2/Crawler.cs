@@ -4,13 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Net.Http;
 using System.Text.RegularExpressions;
-using System.Collections.Concurrent;
-using System.Diagnostics;
-using System.Security.Policy;
-using System.Threading;
-using System.Net;
-using System.IO;
-using System.Windows.Forms;
 
 namespace Crawler2
 {
