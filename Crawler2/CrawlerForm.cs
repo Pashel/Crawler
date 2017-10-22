@@ -1,23 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Windows.Forms;
 using System.ComponentModel.DataAnnotations;
 using System.Configuration;
+using System.Windows.Forms;
 using Crawler2.BLL.Contracts;
 using Crawler2.BLL.Services;
 using Crawler2.Extensions;
+using Validator = Crawler2.BLL.Services.Validator;
 
 namespace Crawler2
 {
     public partial class CrawlerForm : Form
     {
-        private ICrawler _crawler;
+        private readonly ICrawler _crawler;
 
         public CrawlerForm()
         {
             InitializeComponent();
 
-            _crawler = new Crawler(new BLL.Services.Validator());
+            _crawler = new Crawler(new Validator(), new PageParser());
         }
 
         private async void StartClick(object sender, EventArgs e)
@@ -25,7 +26,7 @@ namespace Crawler2
             FormStateWorking();
 
             var deep = Deep.Text.ToInt();
-            if(!deep.HasValue) {
+            if (!deep.HasValue) {
                 SetError("Can't convert Deep field to the number");
                 return;
             }
@@ -35,12 +36,8 @@ namespace Crawler2
 
             List<string> result;
             try {
-                if (timeLimitToDownload.HasValue) {
-                    _crawler.TimeLimitToDownload = timeLimitToDownload.Value;
-                }
-                if (downloadingGroupSize.HasValue) {
-                    _crawler.DownloadingGroupSize = downloadingGroupSize.Value;
-                }
+                if (timeLimitToDownload.HasValue) _crawler.TimeLimitToDownload = timeLimitToDownload.Value;
+                if (downloadingGroupSize.HasValue) _crawler.DownloadingGroupSize = downloadingGroupSize.Value;
 
                 result = await _crawler.StartAsync(Url.Text, deep.Value, Word.Text);
             }
@@ -49,16 +46,16 @@ namespace Crawler2
                 return;
             }
 
-            PrintResult(result);
-            FormStateFree();
+            ShowResult(result);
         }
 
-        private void PrintResult(List<string> result)
+        private void ShowResult(List<string> result)
         {
-            OutputBox.Text += String.Format("Total: {0}\r\n", result.Count);
+            OutputBox.Text += $"Total: {result.Count}\r\n";
             foreach (var url in result) {
-                OutputBox.Text += String.Format("{0}\r\n", url); ;
+                OutputBox.Text += $"{url}\r\n";
             }
+            FormStateFree();
         }
 
         private void SetError(string message)

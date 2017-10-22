@@ -1,32 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Net.Http;
-using System.Text.RegularExpressions;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 using Crawler2.BLL.Contracts;
 
 namespace Crawler2.BLL.Services
 {
     public class Crawler : ICrawler
     {
-        private string _word;
-        private int _deep;
-
         private static HttpClient _client;
 
-        private List<string> _viewed = new List<string>();
-        private List<string> _results = new List<string>();
+        private readonly IPageParser _parser;
+        private readonly IValidator _validator;
+        private readonly List<string> _results = new List<string>();
+
+        private int _deep;
+        private string _word;
 
         public int TimeLimitToDownload
         {
-            set
-            {
+            set {
                 var result = _validator.CheckTimeLimit(value);
-                if (!result.Success) {
-                    throw new ValidationException(result.Message);
-                }
+                if (!result.Success) throw new ValidationException(result.Message);
                 _client.Timeout = TimeSpan.FromSeconds(value);
             }
         }
@@ -35,26 +32,20 @@ namespace Crawler2.BLL.Services
         public int DownloadingGroupSize
         {
             get { return _downloadGroupSize; }
-            set
-            {
+            set {
                 var result = _validator.CheckGroupSize(value);
-                if (!result.Success) {
-                    throw new ValidationException(result.Message);
-                }
+                if (!result.Success) throw new ValidationException(result.Message);
                 _downloadGroupSize = value;
             }
         }
 
-        private const string HRefPattern = "href\\s*=\\s*[\"']\\s*((http|/[^/\"'])[^\"']*)[\"']";
-
-        private IValidator _validator;
-
-        public Crawler(IValidator validator)
+        public Crawler(IValidator validator, IPageParser parser)
         {
-            _validator = validator;
             _client = new HttpClient();
+            _validator = validator;
+            _parser = parser;
 
-            // set default properties for crawler
+            // set default downloading properties for crawler
             TimeLimitToDownload = 10;
             DownloadingGroupSize = 100;
         }
@@ -62,18 +53,17 @@ namespace Crawler2.BLL.Services
         public async Task<List<string>> StartAsync(string link, int deep, string word)
         {
             var result = _validator.CheckDeep(deep);
-            if (!result.Success) {
-                throw new ValidationException(result.Message);
-            }
+            if (!result.Success) throw new ValidationException(result.Message);
+
             result = _validator.CheckWord(word);
-            if (!result.Success) {
-                throw new ValidationException(result.Message);
-            }
+            if (!result.Success) throw new ValidationException(result.Message);
 
-            _word = word;
+            // save parameters
             _deep = deep;
+            _word = word;
 
-            string content = await GetContentAsync(link);
+            // start searching process
+            var content = await GetContentAsync(link);
             await ParseContentAsync(link, content, _deep);
             return _results;
         }
@@ -85,87 +75,41 @@ namespace Crawler2.BLL.Services
 
             var results = resultTasks.Select(task => task.Result).ToList();
 
-            for (var i = 0; i < results.Count; i++)
-            {
-                await ParseContentAsync(subLinks[i], results[i], level - 1);
+            for (var i = 0; i < results.Count; i++) await ParseContentAsync(subLinks[i], results[i], level - 1);
+        }
+
+        private async Task<string> GetContentAsync(string link)
+        {
+            var content = "";
+            try {
+                content = await _client.GetStringAsync(link);
             }
+            catch {
+                // ignored
+            }
+            return content;
         }
 
         private async Task ParseContentAsync(string link, string content, int level)
         {
-            if (String.IsNullOrEmpty(content)) {
-                return;
-            }
+            if (string.IsNullOrEmpty(content)) return;
 
-            bool isFound = await SearchWordAsync(content);
-            if (isFound) {
-                _results.Add(link);
-            }
+            var isFound = await _parser.SearchWordAsync(content, _word);
+            if (isFound) _results.Add(link);
 
-            if (level > 0)
-            {
-                var subLinks = await GetSubLinksAsync(link, content);
+            if (level > 0) {
+                var subLinks = await _parser.GetSubLinksAsync(link, content);
+
                 // parse sublinks in separate groups
                 while (subLinks.Count > DownloadingGroupSize) {
                     var group = subLinks.Take(DownloadingGroupSize).ToList();
                     subLinks = subLinks.Skip(DownloadingGroupSize).ToList();
                     await ParseSubLinksAsync(group, level);
                 }
+
                 // parse remain part of links
-                if (subLinks.Count > 0) {
-                    await ParseSubLinksAsync(subLinks, level);
-                }
+                if (subLinks.Count > 0) await ParseSubLinksAsync(subLinks, level);
             }
-        }
-
-        private async Task<string> GetContentAsync(string link)
-        {
-            string content = "";
-            try {
-                content = await _client.GetStringAsync(link);
-            }
-            catch { }
-            return content;
-        }
-
-        private Task<List<string>> GetSubLinksAsync(string link, string page)
-        {
-            return Task.Run(() => {
-                var match = Regex.Match(page,
-                    HRefPattern,
-                    RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-                var url = new Uri(link);
-                var mathes = new List<string>();
-
-                while (match.Success) {
-                    var subLink = match.Groups[1].Value;
-
-                    // for next case: href="/home"
-                    if (!subLink.StartsWith("http")) {
-                        subLink = url.Scheme + "://" + url.Host + subLink;
-                    }
-
-                    // check if link was already viewed
-                    if (!_viewed.Contains(subLink)) {
-                        _viewed.Add(subLink);
-                        mathes.Add(subLink);
-                    }
-                    match = match.NextMatch();
-                }
-
-                return mathes;
-            });
-        }
-
-        private Task<bool> SearchWordAsync(string content)
-        {
-            return Task.Run(() => {
-                if (content.IndexOf(_word) >= 0) {
-                    return true;
-                }
-                return false;
-            });
         }
     }
 }

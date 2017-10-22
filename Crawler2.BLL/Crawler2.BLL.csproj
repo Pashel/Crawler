@@ -43,10 +43,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Contracts\ICrawler.cs" />
+    <Compile Include="Contracts\IPageParser.cs" />
     <Compile Include="Contracts\IValidator.cs" />
     <Compile Include="Domain\ValidationResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\Crawler.cs" />
+    <Compile Include="Services\PageParser.cs" />
     <Compile Include="Services\Validator.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
