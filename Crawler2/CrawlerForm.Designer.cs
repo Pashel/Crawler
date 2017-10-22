@@ -34,7 +34,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.Url = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.richTextBox1 = new System.Windows.Forms.RichTextBox();
+            this.OutputBox = new System.Windows.Forms.RichTextBox();
             this.Start = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
@@ -89,13 +89,13 @@
             this.label1.TabIndex = 10;
             this.label1.Text = "Url";
             // 
-            // richTextBox1
+            // OutputBox
             // 
-            this.richTextBox1.Location = new System.Drawing.Point(8, 99);
-            this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(534, 195);
-            this.richTextBox1.TabIndex = 9;
-            this.richTextBox1.Text = "";
+            this.OutputBox.Location = new System.Drawing.Point(8, 99);
+            this.OutputBox.Name = "OutputBox";
+            this.OutputBox.Size = new System.Drawing.Size(534, 195);
+            this.OutputBox.TabIndex = 9;
+            this.OutputBox.Text = "";
             // 
             // Start
             // 
@@ -118,7 +118,7 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.Url);
             this.Controls.Add(this.label1);
-            this.Controls.Add(this.richTextBox1);
+            this.Controls.Add(this.OutputBox);
             this.Controls.Add(this.Start);
             this.MaximizeBox = false;
             this.MaximumSize = new System.Drawing.Size(566, 338);
@@ -138,7 +138,7 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox Url;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.RichTextBox richTextBox1;
+        private System.Windows.Forms.RichTextBox OutputBox;
         private System.Windows.Forms.Button Start;
     }
 }

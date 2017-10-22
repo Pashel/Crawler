@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using  Crawler2.BLL.Contracts;
-using Crawler2.BLL.Services;
 using System.ComponentModel.DataAnnotations;
+using System.Configuration;
+using Crawler2.BLL.Contracts;
+using Crawler2.BLL.Services;
+using Crawler2.Extensions;
 
 namespace Crawler2
 {
@@ -15,34 +17,35 @@ namespace Crawler2
         {
             InitializeComponent();
 
-            _crawler = new Crawler();
+            _crawler = new Crawler(new BLL.Services.Validator());
         }
 
         private async void StartClick(object sender, EventArgs e)
         {
             FormStateWorking();
 
-            int deep;
-            try {
-                deep = int.Parse(Deep.Text);
-            }
-            catch (Exception ex) {
-                richTextBox1.Text = "Can't convert Deep field to the number";
-                FormStateFree();
+            var deep = Deep.Text.ToInt();
+            if(!deep.HasValue) {
+                SetError("Can't convert Deep field to the number");
                 return;
             }
 
-            // when DownloadingGroupSize >>> and TimeLimitToDownload <<< than crawler works faster but quality is worse (next example works faster)
-            // crawler.DownloadingGroupSize = 250;
-            // crawler.TimeLimitToDownload = 5;
+            var timeLimitToDownload = ConfigurationManager.AppSettings["TimeLimitToDownload"].ToInt();
+            var downloadingGroupSize = ConfigurationManager.AppSettings["DownloadingGroupSize"].ToInt();
 
             List<string> result;
             try {
-                result = await _crawler.StartAsync(Url.Text, deep, Word.Text);
+                if (timeLimitToDownload.HasValue) {
+                    _crawler.TimeLimitToDownload = timeLimitToDownload.Value;
+                }
+                if (downloadingGroupSize.HasValue) {
+                    _crawler.DownloadingGroupSize = downloadingGroupSize.Value;
+                }
+
+                result = await _crawler.StartAsync(Url.Text, deep.Value, Word.Text);
             }
             catch (ValidationException ex) {
-                richTextBox1.Text = ex.Message;
-                FormStateFree();
+                SetError(ex.Message);
                 return;
             }
 
@@ -52,15 +55,22 @@ namespace Crawler2
 
         private void PrintResult(List<string> result)
         {
-            richTextBox1.Text += String.Format("Total: {0}\r\n", result.Count);
+            OutputBox.Text += String.Format("Total: {0}\r\n", result.Count);
             foreach (var url in result) {
-                richTextBox1.Text += String.Format("{0}\r\n", url); ;
+                OutputBox.Text += String.Format("{0}\r\n", url); ;
             }
         }
+
+        private void SetError(string message)
+        {
+            OutputBox.Text = message;
+            FormStateFree();
+        }
+
         private void FormStateWorking()
         {
             Start.Enabled = false;
-            richTextBox1.Clear();
+            OutputBox.Clear();
         }
 
         private void FormStateFree()

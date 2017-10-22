@@ -19,18 +19,44 @@ namespace Crawler2.BLL.Services
         private List<string> _viewed = new List<string>();
         private List<string> _results = new List<string>();
 
-        public int TimeLimitToDownload = 10;
-        public int DownloadingGroupSize = 100;
+        public int TimeLimitToDownload
+        {
+            set
+            {
+                var result = _validator.CheckTimeLimit(value);
+                if (!result.Success) {
+                    throw new ValidationException(result.Message);
+                }
+                _client.Timeout = TimeSpan.FromSeconds(value);
+            }
+        }
+
+        private int _downloadGroupSize;
+        public int DownloadingGroupSize
+        {
+            get { return _downloadGroupSize; }
+            set
+            {
+                var result = _validator.CheckGroupSize(value);
+                if (!result.Success) {
+                    throw new ValidationException(result.Message);
+                }
+                _downloadGroupSize = value;
+            }
+        }
 
         private const string HRefPattern = "href\\s*=\\s*[\"']\\s*((http|/[^/\"'])[^\"']*)[\"']";
 
         private IValidator _validator;
 
-        public Crawler()
+        public Crawler(IValidator validator)
         {
+            _validator = validator;
             _client = new HttpClient();
-            _validator = new Validator();
-            //_client.Timeout = TimeSpan.FromSeconds(TimeLimitToDownload);
+
+            // set default properties for crawler
+            TimeLimitToDownload = 10;
+            DownloadingGroupSize = 100;
         }
 
         public async Task<List<string>> StartAsync(string link, int deep, string word)
@@ -67,14 +93,12 @@ namespace Crawler2.BLL.Services
 
         private async Task ParseContentAsync(string link, string content, int level)
         {
-            if (String.IsNullOrEmpty(content))
-            {
+            if (String.IsNullOrEmpty(content)) {
                 return;
             }
 
             bool isFound = await SearchWordAsync(content);
-            if (isFound)
-            {
+            if (isFound) {
                 _results.Add(link);
             }
 
@@ -82,15 +106,13 @@ namespace Crawler2.BLL.Services
             {
                 var subLinks = await GetSubLinksAsync(link, content);
                 // parse sublinks in separate groups
-                while (subLinks.Count > DownloadingGroupSize)
-                {
+                while (subLinks.Count > DownloadingGroupSize) {
                     var group = subLinks.Take(DownloadingGroupSize).ToList();
                     subLinks = subLinks.Skip(DownloadingGroupSize).ToList();
                     await ParseSubLinksAsync(group, level);
                 }
                 // parse remain part of links
-                if (subLinks.Count > 0)
-                {
+                if (subLinks.Count > 0) {
                     await ParseSubLinksAsync(subLinks, level);
                 }
             }
@@ -99,8 +121,7 @@ namespace Crawler2.BLL.Services
         private async Task<string> GetContentAsync(string link)
         {
             string content = "";
-            try
-            {
+            try {
                 content = await _client.GetStringAsync(link);
             }
             catch { }
@@ -117,19 +138,16 @@ namespace Crawler2.BLL.Services
                 var url = new Uri(link);
                 var mathes = new List<string>();
 
-                while (match.Success)
-                {
+                while (match.Success) {
                     var subLink = match.Groups[1].Value;
 
                     // for next case: href="/home"
-                    if (!subLink.StartsWith("http"))
-                    {
+                    if (!subLink.StartsWith("http")) {
                         subLink = url.Scheme + "://" + url.Host + subLink;
                     }
 
                     // check if link was already viewed
-                    if (!_viewed.Contains(subLink))
-                    {
+                    if (!_viewed.Contains(subLink)) {
                         _viewed.Add(subLink);
                         mathes.Add(subLink);
                     }
@@ -143,8 +161,7 @@ namespace Crawler2.BLL.Services
         private Task<bool> SearchWordAsync(string content)
         {
             return Task.Run(() => {
-                if (content.IndexOf(_word) >= 0)
-                {
+                if (content.IndexOf(_word) >= 0) {
                     return true;
                 }
                 return false;

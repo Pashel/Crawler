@@ -32,5 +32,31 @@ namespace Crawler2.BLL.Services
                 Success = true
             };
         }
+
+        public ValidationResult CheckTimeLimit(int timeout)
+        {
+            if (timeout < 5 || timeout > 300) {
+                return new ValidationResult() {
+                    Success = false,
+                    Message = "Time limit should be between 5 and 300 seconds"
+                };
+            }
+            return new ValidationResult() {
+                Success = true
+            };
+        }
+
+        public ValidationResult CheckGroupSize(int groupSize)
+        {
+            if (groupSize < 1 || groupSize > 1000) {
+                return new ValidationResult() {
+                    Success = false,
+                    Message = "Time limit should be between 1 and 1000 requests"
+                };
+            }
+            return new ValidationResult() {
+                Success = true
+            };
+        }
     }
 }
