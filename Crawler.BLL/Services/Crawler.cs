@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 
-namespace Crawler2
+namespace Crawler.BLL.Services
 {
     class Crawler
     {
@@ -30,7 +30,7 @@ namespace Crawler2
             _client.Timeout = TimeSpan.FromSeconds(TimeLimitToDownload);
         }
 
-        public async Task<IEnumerable<string>> StartAsync(string link)
+        public async Task<List<string>> StartAsync(string link)
         {
             string content = await GetContentAsync(link);
             await ParseContentAsync(link, content, _deep);
@@ -44,32 +44,38 @@ namespace Crawler2
 
             var results = resultTasks.Select(task => task.Result).ToList();
 
-            for(var i = 0; i < results.Count; i++) {
+            for (var i = 0; i < results.Count; i++)
+            {
                 await ParseContentAsync(subLinks[i], results[i], level - 1);
             }
         }
 
         private async Task ParseContentAsync(string link, string content, int level)
         {
-            if (String.IsNullOrEmpty(content)) {
+            if (String.IsNullOrEmpty(content))
+            {
                 return;
             }
 
             bool isFound = await SearchWordAsync(content);
-            if (isFound) {
+            if (isFound)
+            {
                 _results.Add(link);
             }
 
-            if (level > 0) {
+            if (level > 0)
+            {
                 var subLinks = await GetSubLinksAsync(link, content);
                 // parse sublinks in separate groups
-                while (subLinks.Count > DownloadingGroupSize) {
+                while (subLinks.Count > DownloadingGroupSize)
+                {
                     var group = subLinks.Take(DownloadingGroupSize).ToList();
                     subLinks = subLinks.Skip(DownloadingGroupSize).ToList();
                     await ParseSubLinksAsync(group, level);
                 }
                 // parse remain part of links
-                if (subLinks.Count > 0) {
+                if (subLinks.Count > 0)
+                {
                     await ParseSubLinksAsync(subLinks, level);
                 }
             }
@@ -78,9 +84,11 @@ namespace Crawler2
         private async Task<string> GetContentAsync(string link)
         {
             string content = "";
-            try {
+            try
+            {
                 content = await _client.GetStringAsync(link);
-            } catch {}
+            }
+            catch { }
             return content;
         }
 
@@ -94,16 +102,19 @@ namespace Crawler2
                 var url = new Uri(link);
                 var mathes = new List<string>();
 
-                while (match.Success) {
+                while (match.Success)
+                {
                     var subLink = match.Groups[1].Value;
 
                     // for next case: href="/home"
-                    if (!subLink.StartsWith("http")) {
+                    if (!subLink.StartsWith("http"))
+                    {
                         subLink = url.Scheme + "://" + url.Host + subLink;
                     }
 
                     // check if link was already viewed
-                    if (!_viewed.Contains(subLink)) {
+                    if (!_viewed.Contains(subLink))
+                    {
                         _viewed.Add(subLink);
                         mathes.Add(subLink);
                     }
@@ -117,7 +128,8 @@ namespace Crawler2
         private Task<bool> SearchWordAsync(string content)
         {
             return Task.Run(() => {
-                if (content.IndexOf(_word) >= 0) {
+                if (content.IndexOf(_word) >= 0)
+                {
                     return true;
                 }
                 return false;
@@ -125,4 +137,3 @@ namespace Crawler2
         }
     }
 }
-
