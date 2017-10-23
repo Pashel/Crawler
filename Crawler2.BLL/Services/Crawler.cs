@@ -10,7 +10,7 @@ namespace Crawler2.BLL.Services
 {
     public class Crawler : ICrawler
     {
-        private static HttpClient _client;
+        public static HttpClient _client;
 
         private readonly IPageParser _parser;
         private readonly IValidator _validator;
@@ -63,22 +63,12 @@ namespace Crawler2.BLL.Services
             _word = word;
 
             // start searching process
-            var content = await GetContentAsync(link);
+            var content = await JustGetContentAsync(link);
             await ParseContentAsync(link, content, _deep);
             return _results;
         }
 
-        private async Task ParseSubLinksAsync(List<string> subLinks, int level)
-        {
-            var resultTasks = subLinks.Select(subLink => GetContentAsync(subLink)).ToList();
-            await Task.WhenAll(resultTasks);
-
-            var results = resultTasks.Select(task => task.Result).ToList();
-
-            for (var i = 0; i < results.Count; i++) await ParseContentAsync(subLinks[i], results[i], level - 1);
-        }
-
-        private async Task<string> GetContentAsync(string link)
+        public virtual async Task<string> JustGetContentAsync(string link)
         {
             var content = "";
             try {
@@ -88,6 +78,18 @@ namespace Crawler2.BLL.Services
                 // ignored
             }
             return content;
+        }
+
+        private async Task ParseSubLinksAsync(List<string> subLinks, int level)
+        {
+            var resultTasks = subLinks.Select(subLink => JustGetContentAsync(subLink)).ToList();
+            await Task.WhenAll(resultTasks);
+
+            var results = resultTasks.Select(task => task.Result).ToList();
+
+            for (var i = 0; i < results.Count; i++) {
+                await ParseContentAsync(subLinks[i], results[i], level - 1);
+            }
         }
 
         private async Task ParseContentAsync(string link, string content, int level)

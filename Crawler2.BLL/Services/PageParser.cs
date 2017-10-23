@@ -11,10 +11,10 @@ namespace Crawler2.BLL.Services
         private const string HRefPattern = "href\\s*=\\s*[\"']\\s*((http|/[^/\"'])[^\"']*)[\"']";
         private readonly List<string> _viewed = new List<string>();
 
-        public Task<List<string>> GetSubLinksAsync(string link, string page)
+        public Task<List<string>> GetSubLinksAsync(string link, string content)
         {
             return Task.Run(() => {
-                var match = Regex.Match(page,
+                var match = Regex.Match(content,
                     HRefPattern,
                     RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
