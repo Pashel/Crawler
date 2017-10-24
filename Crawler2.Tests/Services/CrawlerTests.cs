@@ -16,6 +16,7 @@ namespace Crawler2.Tests.Services
     {
         private Mock<IValidator> _validator;
         private Mock<IPageParser> _parser;
+        private Mock<IHttpClientWrapper> _client;
         private ICrawler _crawler;
 
         [SetUp]
@@ -33,11 +34,10 @@ namespace Crawler2.Tests.Services
             _parser.Setup(p => p.SearchWordAsync(It.IsAny<string>(), It.IsAny<string>()))
                 .Returns(Task.FromResult(true));
 
-            //_crawler = new Crawler(_validator.Object, _parser.Object);
+            _client = new Mock<IHttpClientWrapper>();
+            _client.Setup(c => c.GetStringAsync(It.IsAny<string>())).Returns(Task.FromResult("hello world"));
 
-            var mock = new Mock<Crawler>(_validator.Object, _parser.Object);
-            mock.Setup(c => c.JustGetContentAsync(It.IsAny<string>())).Returns(Task.FromResult("hello world"));
-            _crawler = mock.Object;
+            _crawler = new Crawler(_client.Object, _validator.Object, _parser.Object);
         }
 
         [Test]

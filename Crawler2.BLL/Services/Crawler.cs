@@ -10,23 +10,14 @@ namespace Crawler2.BLL.Services
 {
     public class Crawler : ICrawler
     {
-        public static HttpClient _client;
-
+        private readonly IHttpClientWrapper _client;
         private readonly IPageParser _parser;
         private readonly IValidator _validator;
+
         private readonly List<string> _results = new List<string>();
 
         private int _deep;
         private string _word;
-
-        public int TimeLimitToDownload
-        {
-            set {
-                var result = _validator.CheckTimeLimit(value);
-                if (!result.Success) throw new ValidationException(result.Message);
-                _client.Timeout = TimeSpan.FromSeconds(value);
-            }
-        }
 
         private int _downloadGroupSize;
         public int DownloadingGroupSize
@@ -39,14 +30,22 @@ namespace Crawler2.BLL.Services
             }
         }
 
-        public Crawler(IValidator validator, IPageParser parser)
+        public int TimeLimitToDownload
         {
-            _client = new HttpClient();
+            set {
+                var result = _validator.CheckTimeLimit(value);
+                if (!result.Success) throw new ValidationException(result.Message);
+                _client.TimeLimitToDownload = value;
+            }
+        }
+
+        public Crawler(IHttpClientWrapper client, IValidator validator, IPageParser parser)
+        {
+            _client = client;
             _validator = validator;
             _parser = parser;
 
             // set default downloading properties for crawler
-            TimeLimitToDownload = 10;
             DownloadingGroupSize = 100;
         }
 
@@ -63,12 +62,12 @@ namespace Crawler2.BLL.Services
             _word = word;
 
             // start searching process
-            var content = await JustGetContentAsync(link);
+            var content = await GetContentAsync(link);
             await ParseContentAsync(link, content, _deep);
             return _results;
         }
 
-        public virtual async Task<string> JustGetContentAsync(string link)
+        private async Task<string> GetContentAsync(string link)
         {
             var content = "";
             try {
@@ -82,7 +81,7 @@ namespace Crawler2.BLL.Services
 
         private async Task ParseSubLinksAsync(List<string> subLinks, int level)
         {
-            var resultTasks = subLinks.Select(subLink => JustGetContentAsync(subLink)).ToList();
+            var resultTasks = subLinks.Select(subLink => GetContentAsync(subLink)).ToList();
             await Task.WhenAll(resultTasks);
 
             var results = resultTasks.Select(task => task.Result).ToList();

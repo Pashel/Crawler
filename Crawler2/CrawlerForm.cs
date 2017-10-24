@@ -12,13 +12,11 @@ namespace Crawler2
 {
     public partial class CrawlerForm : Form
     {
-        private readonly ICrawler _crawler;
-
+        private ICrawler _crawler;
         public CrawlerForm()
         {
             InitializeComponent();
-
-            _crawler = new Crawler(new Validator(), new PageParser());
+            _crawler = new Crawler(new HttpClientWrapper(), new Validator(), new PageParser() );
         }
 
         private async void StartClick(object sender, EventArgs e)
