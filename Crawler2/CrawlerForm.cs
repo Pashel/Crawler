@@ -7,16 +7,20 @@ using Crawler2.BLL.Contracts;
 using Crawler2.BLL.Services;
 using Crawler2.Extensions;
 using Validator = Crawler2.BLL.Services.Validator;
+using Unity;
 
 namespace Crawler2
 {
     public partial class CrawlerForm : Form
     {
         private ICrawler _crawler;
-        public CrawlerForm()
+        private UnityContainer _container;
+
+        public CrawlerForm(UnityContainer container)
         {
             InitializeComponent();
-            _crawler = new Crawler(new HttpClientWrapper(), new Validator(), new PageParser() );
+            _container = container;
+            _crawler = _container.Resolve<ICrawler>();
         }
 
         private async void StartClick(object sender, EventArgs e)
