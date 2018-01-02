@@ -6,7 +6,7 @@ using Unity.Interception.PolicyInjection.Pipeline;
 
 namespace Crawler2.Interceptors
 {
-    class LoggingInterceptionBehavior : IInterceptionBehavior
+    public class LoggingWithUnity : IInterceptionBehavior
     {
         public IMethodReturn Invoke(IMethodInvocation input, GetNextInterceptionBehaviorDelegate getNext)
         {
@@ -43,7 +43,7 @@ namespace Crawler2.Interceptors
 
         private void WriteLog(string message)
         {
-            using (var writer = new StreamWriter("Log.txt", true)) {
+            using (var writer = new StreamWriter("Log-Unity.txt", true)) {
                 writer.WriteLine(message);
             }
         }

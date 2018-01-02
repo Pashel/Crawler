@@ -6,9 +6,7 @@ using Unity;
 using Unity.Injection;
 using Unity.Interception.ContainerIntegration;
 using Unity.Interception.Interceptors.InstanceInterceptors.InterfaceInterception;
-using Unity.Registration;
 using Crawler2.Interceptors;
-using  Unity.Extension;
 
 namespace Crawler2
 {
@@ -34,20 +32,20 @@ namespace Crawler2
 
             container.RegisterType<IHttpClientWrapper, HttpClientWrapper>(
                 new Interceptor<InterfaceInterceptor>(),
-                new InterceptionBehavior<LoggingInterceptionBehavior>()
+                new InterceptionBehavior<LoggingWithUnity>()
             );
             container.RegisterType<IValidator, Validator>(
                 new Interceptor<InterfaceInterceptor>(),
-                new InterceptionBehavior<LoggingInterceptionBehavior>()
+                new InterceptionBehavior<LoggingWithUnity>()
             );
             container.RegisterType<IPageParser, PageParser>(
                 new Interceptor<InterfaceInterceptor>(),
-                new InterceptionBehavior<LoggingInterceptionBehavior>()
+                new InterceptionBehavior<LoggingWithUnity>()
             );
 
             container.RegisterType<ICrawler>(
                 new Interceptor<InterfaceInterceptor>(),
-                new InterceptionBehavior<LoggingInterceptionBehavior>(),
+                new InterceptionBehavior<LoggingWithUnity>(),
                 new InjectionFactory(c => new Crawler(
                     c.Resolve<IHttpClientWrapper>(),
                     c.Resolve<IValidator>(),

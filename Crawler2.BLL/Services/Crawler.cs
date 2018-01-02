@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Crawler2.BLL.Contracts;
+using Crawler2.Interceptors;
 
 namespace Crawler2.BLL.Services
 {
@@ -39,6 +40,7 @@ namespace Crawler2.BLL.Services
             }
         }
 
+        [LoggingPostSharpAspect]
         public Crawler(IHttpClientWrapper client, IValidator validator, IPageParser parser)
         {
             _client = client;
