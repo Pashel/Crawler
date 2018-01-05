@@ -7,17 +7,23 @@ namespace Crawler2.Tests.Services
     [TestFixture]
     class PageParserTests
     {
-        private string _content = "<html>" +
-                                    "<body>" +
-                                    "<p>Hello world hello hello</p>" +
-                                    "<h1>This is the end of global worming!</h1>" +
-                                    "<h2>happy new year!</h2>" +
-                                    "<a href='https://tut.by/blabla'>Go</a>" +
-                                    "<a href='http://google.com'>Go</a>" +
-                                    "<a href='https://yandex.ru?sobaka=pes'>Go</a>" +
-                                    "<a href='/kolbasa'>Go</a>" +
-                                    "</body>" +
-                                    "</html>";
+        private string _content;
+
+        [SetUp]
+        public void Init()
+        {
+            _content = "<html>" +
+                        "<body>" +
+                        "<p>Hello world hello hello</p>" +
+                        "<h1>This is the end of global worming!</h1>" +
+                        "<h2>happy new year!</h2>" +
+                        "<a href='https://tut.by/blabla'>Go</a>" +
+                        "<a href='http://google.com'>Go</a>" +
+                        "<a href='https://yandex.ru?sobaka=pes'>Go</a>" +
+                        "<a href='/kolbasa'>Go</a>" +
+                        "</body>" +
+                        "</html>";
+        }
 
         [Test]
         public async Task SearchWordAsync_FindExistingWord_ShouldReturnTrue()
