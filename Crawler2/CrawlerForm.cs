@@ -20,8 +20,12 @@ namespace Crawler2
         {
             InitializeComponent();
             _container = container;
-            //_crawler = _container.Resolve<ICrawler>();
-            _crawler = new Crawler(new HttpClientWrapper(), new Validator(), new PageParser());
+
+            // Using unity and unity interception
+            _crawler = _container.Resolve<ICrawler>();
+
+            // Using PostSharp interception
+            //_crawler = new Crawler(new HttpClientWrapper(), new Validator(), new PageParser());
         }
 
         private async void StartClick(object sender, EventArgs e)

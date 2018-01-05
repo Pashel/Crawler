@@ -21,7 +21,7 @@ namespace Crawler2.Interceptors
         {
             WriteLog(String.Format(
                 "Method {0} returned {1} at {2}",
-                args.Method, args.ReturnValue,
+                args.Method, args.ReturnValue?.GetType(),
                 DateTime.Now.ToLongTimeString()));
         }
 
